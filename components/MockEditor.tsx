@@ -305,7 +305,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
           {(rule.mode === 'replace' || rule.mode === 'replace-body') && (
             <div className="space-y-2">
               {rule.mode === 'replace-body' && (
-                <div className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                <div className="mock-replace-body-hint text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
                   {modeReplaceBodyHint}
                 </div>
               )}
@@ -356,7 +356,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
                       <button
                         type="button"
                         onClick={() => setBodyView('edit')}
-                        className={`px-2 py-0.5 ${bodyView === 'edit' ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
+                        className={`response-body-view-option px-2 py-0.5 ${bodyView === 'edit' ? 'response-body-view-option--selected bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
                       >
                         {t('jsonEditView', 'Edit')}
                       </button>
@@ -364,7 +364,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
                         type="button"
                         onClick={() => setBodyView('preview')}
                         disabled={!jsonHint.ok}
-                        className={`px-2 py-0.5 border-l border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed ${bodyView === 'preview' && jsonHint.ok ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
+                        className={`response-body-view-option px-2 py-0.5 border-l border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed ${bodyView === 'preview' && jsonHint.ok ? 'response-body-view-option--selected bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
                       >
                         {t('jsonTreeView', 'Tree')}
                       </button>
@@ -379,7 +379,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
                   <textarea
                     value={rule.replaceBody ?? ''}
                     onChange={e => update({ replaceBody: e.target.value })}
-                    rows={12}
+                    rows={24}
                     className={`w-full font-mono text-xs border rounded p-2 focus:outline-none transition-colors ${jsonHint.ok ? 'border-gray-200 focus:border-green-500' : 'border-red-300 focus:border-red-500'}`}
                     placeholder={'{ "code": 0, "data": {} }'}
                   />
@@ -476,7 +476,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
 const ModeRadio: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`flex-1 px-3 py-2 text-xs rounded border transition-all ${active ? 'border-green-500 bg-green-50 text-green-700 font-semibold' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
+    className={`mock-mode-option flex-1 px-3 py-2 text-xs rounded border transition-all ${active ? 'mock-mode-option--selected border-green-500 bg-green-50 text-green-700 font-semibold' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
   >
     <span className={`inline-block w-2 h-2 rounded-full mr-2 ${active ? 'bg-green-500' : 'bg-gray-300'}`} />
     {children}

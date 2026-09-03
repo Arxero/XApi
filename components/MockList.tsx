@@ -74,7 +74,7 @@ export const MockList: React.FC<MockListProps> = ({
             <button
               onClick={onToggleGlobal}
               title={globalEnabled ? activeLabel : pausedLabel}
-              className={`flex items-center px-2 py-0.5 rounded text-[10px] font-bold border shadow-sm ${globalEnabled ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-400 border-gray-200'}`}
+              className={`mock-global-toggle flex items-center px-2 py-0.5 rounded text-[10px] font-bold border shadow-sm ${globalEnabled ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-400 border-gray-200'}`}
             >
               <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${globalEnabled ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`} />
               {globalEnabled ? activeLabel : pausedLabel}
@@ -107,7 +107,7 @@ export const MockList: React.FC<MockListProps> = ({
             <div className="text-[10px] text-gray-400 italic">{emptyHintText}</div>
           </div>
         ) : (
-          <div className="space-y-0.5">
+          <div className="mock-rule-list space-y-0.5">
             {rules.map(r => {
               const isActive = activeRuleId === r.id;
               const { host, uri } = splitPattern(r.urlPattern);

@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { applyLanguage, LANGUAGE_STORAGE_KEY } from './i18n';
+import { applyTheme, normalizeTheme, THEME_STORAGE_KEY } from './theme';
+import type { Theme } from './theme';
 import { LoggedRequest, MockRule, GlobalHeader } from './types';
 import { formatUrl, formatTime, getMethodBadgeColor, generateId } from './utils';
 import {
@@ -28,6 +30,7 @@ const Popup = () => {
   const [globalHeadersEnabled, setGlobalHeadersEnabled] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [languageVersion, setLanguageVersion] = useState(0);
+  const [theme, setTheme] = useState<Theme>('light');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -47,18 +50,24 @@ const Popup = () => {
   const githubRepositoryText = chrome.i18n.getMessage("githubRepository") || 'GitHub Repository';
   const sendFeedbackText = chrome.i18n.getMessage("sendFeedback") || 'Send Feedback';
   const resetWorkspaceText = chrome.i18n.getMessage("resetWorkspace") || 'Reset Workspace';
+  const themeText = chrome.i18n.getMessage("theme") || 'Theme';
+  const lightModeText = chrome.i18n.getMessage("lightMode") || 'Light';
+  const darkModeText = chrome.i18n.getMessage("darkMode") || 'Dark';
 
   useEffect(() => {
     // Load initial state
     if (chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(
-        ['isRecording', 'logs', MOCK_GLOBAL_ENABLED_KEY, MOCK_RULES_KEY, GLOBAL_HEADERS_KEY, GLOBAL_HEADERS_ENABLED_KEY, POPUP_ACTIVE_TAB_KEY, LANGUAGE_STORAGE_KEY],
+        ['isRecording', 'logs', MOCK_GLOBAL_ENABLED_KEY, MOCK_RULES_KEY, GLOBAL_HEADERS_KEY, GLOBAL_HEADERS_ENABLED_KEY, POPUP_ACTIVE_TAB_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY],
         (result) => {
           const storedLanguage = result[LANGUAGE_STORAGE_KEY];
           if (storedLanguage === 'en' || storedLanguage === 'zh_CN') {
             applyLanguage(storedLanguage);
             setLanguageVersion(v => v + 1);
           }
+          const storedTheme = normalizeTheme(result[THEME_STORAGE_KEY]);
+          setTheme(storedTheme);
+          applyTheme(storedTheme);
           const savedTab = result[POPUP_ACTIVE_TAB_KEY];
           if (savedTab === 'capture' || savedTab === 'mock' || savedTab === 'header') {
             setActiveTab(savedTab);
@@ -90,6 +99,11 @@ const Popup = () => {
          if (changes[GLOBAL_HEADERS_ENABLED_KEY]) {
             setGlobalHeadersEnabled(changes[GLOBAL_HEADERS_ENABLED_KEY].newValue === true);
          }
+         if (changes[THEME_STORAGE_KEY]) {
+            const nextTheme = normalizeTheme(changes[THEME_STORAGE_KEY].newValue);
+            setTheme(nextTheme);
+            applyTheme(nextTheme);
+         }
          if (changes[LANGUAGE_STORAGE_KEY]) {
             const nextLanguage = changes[LANGUAGE_STORAGE_KEY].newValue;
             const normalized = nextLanguage === 'en' || nextLanguage === 'zh_CN' ? nextLanguage : 'en';
@@ -106,6 +120,12 @@ const Popup = () => {
     const newState = !isRecording;
     setIsRecording(newState);
     chrome.storage.local.set({ isRecording: newState });
+  };
+
+  const handleThemeChange = (nextTheme: Theme) => {
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+    chrome.storage.local.set({ [THEME_STORAGE_KEY]: nextTheme });
   };
 
   // Close settings dropdown on outside click
@@ -199,7 +219,7 @@ const Popup = () => {
       className={`relative inline-flex h-5 w-16 items-center rounded-full transition-colors ${on ? 'bg-green-500' : 'bg-gray-600'}`}
     >
       <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${on ? 'translate-x-12' : 'translate-x-1'}`} />
-      <span className={`absolute text-[9px] font-bold uppercase tracking-wide text-white pointer-events-none ${on ? 'left-1.5' : 'right-1.5'}`}>
+      <span className={`popup-toggle-label absolute text-[9px] font-bold uppercase tracking-wide text-white pointer-events-none ${on ? 'popup-toggle-label--enabled left-1.5' : 'right-1.5'}`}>
         {label}
       </span>
     </button>
@@ -230,6 +250,25 @@ const Popup = () => {
                   <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50">
                      <span className="text-[10px] font-bold text-gray-400 uppercase">Version {APP_CONFIG.VERSION}</span>
                   </div>
+                  <div className="px-3 py-2 border-b border-gray-100">
+                     <div className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wide text-gray-400">{themeText}</div>
+                     <div className="theme-option-group flex rounded bg-gray-100 p-0.5" role="group" aria-label={themeText}>
+                        <button
+                           type="button"
+                           onClick={() => handleThemeChange('light')}
+                           className={`theme-option flex-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors ${theme === 'light' ? 'theme-option--selected bg-green-50 text-green-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                        >
+                           {lightModeText}
+                        </button>
+                        <button
+                           type="button"
+                           onClick={() => handleThemeChange('dark')}
+                           className={`flex-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors ${theme === 'dark' ? 'bg-green-50 text-green-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                        >
+                           {darkModeText}
+                        </button>
+                     </div>
+                  </div>
                   <a href={APP_CONFIG.GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex items-center w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-green-50 transition-colors">
                      <svg className="w-3.5 h-3.5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z" /></svg>
                      {githubRepositoryText}
@@ -253,10 +292,10 @@ const Popup = () => {
 
       {/* Tab bar */}
       <div className="flex border-b border-gray-200 flex-shrink-0">
-         <button className={tabButtonClass('capture')} onClick={() => selectTab('capture')}>
+         <button className={tabButtonClass('header')} onClick={() => selectTab('header')}>
             <span className="inline-flex items-center justify-center gap-1.5">
-               {captureTabText}
-               <span className={`h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse ${isRecording ? '' : 'invisible'}`} title={recordingText} />
+               {headerTabText}
+               <span className={`h-1.5 w-1.5 rounded-full bg-green-500 ${globalHeadersEnabled ? '' : 'invisible'}`} />
             </span>
          </button>
          <button className={tabButtonClass('mock')} onClick={() => selectTab('mock')}>
@@ -265,10 +304,10 @@ const Popup = () => {
                <span className={`h-1.5 w-1.5 rounded-full bg-green-500 ${mockGlobalEnabled ? '' : 'invisible'}`} />
             </span>
          </button>
-         <button className={tabButtonClass('header')} onClick={() => selectTab('header')}>
+         <button className={tabButtonClass('capture')} onClick={() => selectTab('capture')}>
             <span className="inline-flex items-center justify-center gap-1.5">
-               {headerTabText}
-               <span className={`h-1.5 w-1.5 rounded-full bg-green-500 ${globalHeadersEnabled ? '' : 'invisible'}`} />
+               {captureTabText}
+               <span className={`h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse ${isRecording ? '' : 'invisible'}`} title={recordingText} />
             </span>
          </button>
       </div>
@@ -370,7 +409,7 @@ const Popup = () => {
                         <li key={rule.id} className="px-3 py-2 bg-white flex items-center justify-between gap-2">
                             <div className="flex flex-col min-w-0 flex-1 cursor-pointer" onClick={() => openDashboardMock(rule.id)}>
                                <div className="flex items-center gap-1.5">
-                                  <span className={`text-[9px] font-bold px-1 rounded ${getMethodBadgeColor(rule.method === 'ANY' ? '' : rule.method)}`}>
+                                  <span className={`mock-rule-method-badge text-[9px] font-bold px-1 rounded ${getMethodBadgeColor(rule.method === 'ANY' ? '' : rule.method)}`}>
                                      {rule.method}
                                   </span>
                                   <span className="text-xs font-semibold text-gray-700 truncate">{rule.name}</span>
@@ -418,7 +457,7 @@ const Popup = () => {
              </span>
              <Toggle on={globalHeadersEnabled} onClick={toggleHeadersEnabled} label={headerTabText} />
           </div>
-          <div className="px-3 py-2 bg-yellow-50 border-b border-yellow-100 flex-shrink-0">
+          <div className="global-header-hint px-3 py-2 bg-yellow-50 border-b border-yellow-100 flex-shrink-0">
              <span className="text-[10px] text-yellow-700 leading-tight block">
                 {chrome.i18n.getMessage("globalHeaderHint") || 'When enabled, every XHR/Fetch request will carry the enabled headers.'}
              </span>

@@ -634,5 +634,17 @@
   "chineseSimplified": {
     "message": "简体中文",
     "description": "简体中文语言选项"
+  },
+  "theme": {
+    "message": "主题",
+    "description": "设置中的主题选择标签"
+  },
+  "lightMode": {
+    "message": "浅色",
+    "description": "浅色主题选项"
+  },
+  "darkMode": {
+    "message": "深色",
+    "description": "深色主题选项"
   }
 }

@@ -12,6 +12,8 @@ import { generateId, queryStringToParams, parseCurl } from './utils';
 import { createMockRule, MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, buildPatchesFromJson } from './mockUtils';
 import { applyLanguage, LANGUAGE_STORAGE_KEY } from './i18n';
 import type { AppLanguage } from './i18n';
+import { applyTheme, normalizeTheme, THEME_STORAGE_KEY } from './theme';
+import type { Theme } from './theme';
 
 // 浏览器禁止通过 fetch 接口设置的请求头列表
 const FORBIDDEN_HEADERS = [
@@ -79,6 +81,7 @@ const App: React.FC = () => {
   const [mockRules, setMockRules] = useState<MockRule[]>([]);
   const [mockGlobalEnabled, setMockGlobalEnabled] = useState(false);
   const [languageVersion, setLanguageVersion] = useState(0);
+  const [theme, setTheme] = useState<Theme>('light');
   const initializedRef = useRef(false);
 
   const activeTab = tabs.find(t => t.id === activeTabId);
@@ -94,9 +97,15 @@ const App: React.FC = () => {
       setTabs(prev => prev.map(t => t.type === 'welcome' ? { ...t, title: chrome.i18n.getMessage("welcomeTabTitle") } : t));
   };
 
+  const handleThemeChange = (nextTheme: Theme) => {
+      setTheme(nextTheme);
+      applyTheme(nextTheme);
+      chrome.storage.local.set({ [THEME_STORAGE_KEY]: nextTheme });
+  };
+
   useEffect(() => {
     if (chrome && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(['collections', 'logs', 'savedTabs', 'savedActiveTabId', 'isRecording', 'rootRequests', MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, LANGUAGE_STORAGE_KEY], (result) => {
+      chrome.storage.local.get(['collections', 'logs', 'savedTabs', 'savedActiveTabId', 'isRecording', 'rootRequests', MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY], (result) => {
         if (result.collections) setCollections(result.collections);
         if (result.rootRequests) setRootRequests(result.rootRequests);
         setIsRecording(!!result.isRecording);
@@ -106,6 +115,9 @@ const App: React.FC = () => {
         if (storedLanguage === 'en' || storedLanguage === 'zh_CN') {
           refreshLanguage(storedLanguage);
         }
+        const storedTheme = normalizeTheme(result[THEME_STORAGE_KEY]);
+        setTheme(storedTheme);
+        applyTheme(storedTheme);
 
         const logs = result.logs || [];
         setHistory(logs);
@@ -142,6 +154,11 @@ const App: React.FC = () => {
         if (changes.isRecording) setIsRecording(changes.isRecording.newValue);
         if (changes[MOCK_RULES_KEY]) setMockRules(changes[MOCK_RULES_KEY].newValue || []);
         if (changes[MOCK_GLOBAL_ENABLED_KEY]) setMockGlobalEnabled(changes[MOCK_GLOBAL_ENABLED_KEY].newValue === true);
+        if (changes[THEME_STORAGE_KEY]) {
+          const nextTheme = normalizeTheme(changes[THEME_STORAGE_KEY].newValue);
+          setTheme(nextTheme);
+          applyTheme(nextTheme);
+        }
         if (changes[LANGUAGE_STORAGE_KEY]) {
           const nextLanguage = changes[LANGUAGE_STORAGE_KEY].newValue;
           const normalized = nextLanguage === 'en' || nextLanguage === 'zh_CN' ? nextLanguage : 'en';
@@ -549,6 +566,8 @@ const App: React.FC = () => {
           onToggleRecording={() => { setIsRecording(!isRecording); chrome.storage.local.set({ isRecording: !isRecording }); }}
           onCollapseSidebar={() => setIsSidebarCollapsed(true)}
           onResetAllData={handleClearAllData}
+          theme={theme}
+          onThemeChange={handleThemeChange}
           mockRules={mockRules}
           mockGlobalEnabled={mockGlobalEnabled}
           onSelectMockRule={openMockRuleInTab}

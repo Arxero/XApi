@@ -42,7 +42,8 @@ export default defineConfig({
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]'
+        assetFileNames: (assetInfo) =>
+          assetInfo.name === 'index.css' ? 'index-[hash][extname]' : '[name].[ext]'
       }
     },
     outDir: 'dist',

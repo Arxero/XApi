@@ -4,6 +4,7 @@ import { LoggedRequest, SidebarTab, CollectionItem, HttpRequest, TabItem, MockRu
 import { formatUrl, formatTime, getMethodColor, generateCurl, generateCurlFromRequest } from '../utils';
 import { Logo } from './Logo';
 import { APP_CONFIG } from '../config';
+import type { Theme } from '../theme';
 import { MockList } from './MockList';
 import { ListItem } from './ListItem';
 
@@ -35,6 +36,8 @@ interface SidebarProps {
   onToggleRecording?: () => void;
   onCollapseSidebar: () => void;
   onResetAllData: () => void;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
   // mock
   mockRules: MockRule[];
   mockGlobalEnabled: boolean;
@@ -66,7 +69,7 @@ const copyToClipboard = (text: string): boolean => {
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  activeTab, onTabChange, history, onImportLoggedRequest, collections, rootRequests, tabs, activeRequestId, activeCapturedId, activeMockRuleId, onSelectRequest, onCreateCollection, onCreateRequest, onImportCurl, onClearHistory, onDeleteLog, onRenameCollection, onRenameRequest, onDeleteCollection, onDeleteRequest, onDuplicateRequest, onToggleCollapse, onMoveRequest, isRecording, onToggleRecording, onCollapseSidebar, onResetAllData,
+  activeTab, onTabChange, history, onImportLoggedRequest, collections, rootRequests, tabs, activeRequestId, activeCapturedId, activeMockRuleId, onSelectRequest, onCreateCollection, onCreateRequest, onImportCurl, onClearHistory, onDeleteLog, onRenameCollection, onRenameRequest, onDeleteCollection, onDeleteRequest, onDuplicateRequest, onToggleCollapse, onMoveRequest, isRecording, onToggleRecording, onCollapseSidebar, onResetAllData, theme, onThemeChange,
   mockRules, mockGlobalEnabled, onSelectMockRule, onCreateMockRule, onToggleMockGlobal, onToggleMockRule, onDeleteMockRule, onDuplicateMockRule, onClearMockRules, onRenameMockRule, onMockFromLog
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'collection' | 'request' | 'log', id: string, data?: any } | null>(null);
@@ -182,13 +185,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const githubRepositoryText = chrome.i18n.getMessage("githubRepository");
   const sendFeedbackText = chrome.i18n.getMessage("sendFeedback");
   const resetWorkspaceText = chrome.i18n.getMessage("resetWorkspace");
+  const themeText = chrome.i18n.getMessage("theme") || 'Theme';
+  const lightModeText = chrome.i18n.getMessage("lightMode") || 'Light';
+  const darkModeText = chrome.i18n.getMessage("darkMode") || 'Dark';
 
   return (
     <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200 w-72 flex-shrink-0 relative select-none">
       {/* Header height is h-9 (36px) to match TabBar */}
       <div className="h-9 px-3 border-b border-gray-200 bg-white flex items-center justify-between">
          <div className="flex items-center">
-            <Logo size={18} />
+            <Logo size={18} textColor="text-slate-800 dark:text-white" />
          </div>
          <div className="flex items-center space-x-1">
             <button onClick={onImportCurl} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded" title={importCurlText}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeWidth={2}/></svg></button>
@@ -207,6 +213,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 shadow-xl rounded-md z-[110] py-1 animate-fadeIn overflow-hidden">
                         <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50">
                             <span className="text-[10px] font-bold text-gray-400 uppercase">Version {APP_CONFIG.VERSION}</span>
+                        </div>
+                        <div className="px-3 py-2 border-b border-gray-100">
+                            <div className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wide text-gray-400">{themeText}</div>
+                            <div className="theme-option-group flex rounded bg-gray-100 p-0.5" role="group" aria-label={themeText}>
+                                <button
+                                    type="button"
+                                    onClick={() => onThemeChange('light')}
+                                    className={`theme-option flex-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors ${theme === 'light' ? 'theme-option--selected bg-green-50 text-green-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                                >
+                                    {lightModeText}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onThemeChange('dark')}
+                                    className={`flex-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors ${theme === 'dark' ? 'bg-green-50 text-green-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                                >
+                                    {darkModeText}
+                                </button>
+                            </div>
                         </div>
                         <a href={APP_CONFIG.GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex items-center w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-green-50 transition-colors">
                             <svg className="w-3.5 h-3.5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24">

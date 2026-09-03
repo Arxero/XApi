@@ -66,4 +66,193 @@
     animation: logo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-html.dark textarea::-webkit-resizer { background-color: #262626; }
+/* Replace Chromium's light native resize artwork with a dark authored grip. */
+html.dark textarea::-webkit-resizer {
+  background-color: #262626;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 16L16 5M10 16L16 10M14 16L16 14' stroke='%23737373' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+/* Shared neutral-black dark palette for the popup and dashboard. */
+html.dark,
+html.dark body {
+  background-color: #080808;
+  color: #f5f5f5;
+}
+
+html.dark .bg-white { background-color: #141414 !important; }
+html.dark .bg-gray-50 { background-color: #080808 !important; }
+html.dark .bg-gray-50\/30,
+html.dark .bg-gray-50\/50 { background-color: rgba(8, 8, 8, 0.7) !important; }
+html.dark .bg-gray-100 { background-color: #1a1a1a !important; }
+html.dark .bg-gray-200 { background-color: #262626 !important; }
+html.dark .bg-gray-300,
+html.dark .bg-gray-600 { background-color: #404040 !important; }
+html.dark .bg-gray-900 { background-color: #000 !important; }
+html.dark .bg-green-50,
+html.dark .bg-green-50\/30,
+html.dark .bg-red-50,
+html.dark .bg-indigo-50,
+html.dark .bg-blue-50,
+html.dark .bg-yellow-50 { background-color: #1a1a1a !important; }
+html.dark .bg-green-500,
+html.dark .bg-red-500,
+html.dark .bg-blue-600 { background-color: #404040 !important; }
+
+html.dark .border-white,
+html.dark .border-gray-300,
+html.dark .border-gray-400 { border-color: #525252 !important; }
+html.dark .border-gray-50,
+html.dark .border-gray-100 { border-color: #1f1f1f !important; }
+html.dark .border-gray-200 { border-color: #303030 !important; }
+html.dark .border-green-100,
+html.dark .border-green-200,
+html.dark .border-green-500,
+html.dark .border-red-200,
+html.dark .border-yellow-100,
+html.dark .border-indigo-500 { border-color: #525252 !important; }
+
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-black { color: #dadada !important; }
+html.dark .text-gray-600 { color: #d4d4d4 !important; }
+html.dark .text-gray-500,
+html.dark .text-gray-400 { color: #a3a3a3 !important; }
+html.dark .text-green-500,
+html.dark .text-green-600,
+html.dark .text-green-700,
+html.dark .text-green-800,
+html.dark .text-red-500,
+html.dark .text-red-600,
+html.dark .text-indigo-500,
+html.dark .text-indigo-600,
+html.dark .text-blue-500,
+html.dark .text-blue-600,
+html.dark .text-yellow-500,
+html.dark .text-yellow-600,
+html.dark .text-yellow-700,
+html.dark .text-brand-emerald,
+html.dark .text-brand-blue,
+html.dark .text-brand-indigo { color: #d4d4d4 !important; }
+
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-gray-200:hover,
+html.dark .hover\:bg-green-50:hover,
+html.dark .hover\:bg-red-50:hover,
+html.dark .hover\:bg-indigo-50:hover { background-color: #262626 !important; }
+html.dark .hover\:bg-blue-700:hover { background-color: #525252 !important; }
+html.dark .hover\:text-gray-700:hover,
+html.dark .hover\:text-gray-600:hover { color: #f5f5f5 !important; }
+html.dark .hover\:border-green-500:hover,
+html.dark .focus\:border-green-500:focus,
+html.dark .checked\:border-green-500:checked { border-color: #737373 !important; }
+html.dark .checked\:bg-green-500:checked { background-color: #404040 !important; }
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color: #dadada;
+  background-color: #141414;
+  border-color: #525252;
+  color-scheme: dark;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #a3a3a3; }
+html.dark option { background-color: #141414; color: #f5f5f5; }
+html.dark ::-webkit-scrollbar-thumb { background: #404040; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #525252; }
+
+/* Keep pass-through notices distinct in the neutral dark theme. */
+html.dark .mock-replace-body-hint,
+html.dark .global-header-hint {
+  background-color: #082f49 !important;
+  border-color: #075985 !important;
+  color: #bae6fd !important;
+}
+
+/* Preserve the primary Open Dashboard action in its original blue. */
+html.dark .bg-blue-600 { background-color: #2563eb !important; }
+html.dark .hover\:bg-blue-700:hover { background-color: #1d4ed8 !important; }
+
+/* Preserve original green for enabled controls and active indicators. */
+html.dark .bg-green-500,
+html.dark .checked\:bg-green-500:checked { background-color: #22c55e !important; }
+html.dark .border-green-500,
+html.dark .checked\:border-green-500:checked,
+html.dark .hover\:border-green-500:hover,
+html.dark .focus\:border-green-500:focus { border-color: #22c55e !important; }
+html.dark .text-green-500 { color: #22c55e !important; }
+html.dark .text-green-600,
+html.dark .hover\:text-green-600:hover { color: #16a34a !important; }
+
+/* Make the Popup Mock-list GET badge visible without changing other method badges. */
+html.dark .mock-rule-method-badge.bg-green-100 {
+  background-color: #15803d !important;
+  color: #f0fdf4 !important;
+}
+
+/* Strengthen every Popup GET badge generated by the shared method helper. */
+html.dark .bg-green-100.text-green-700 {
+  background-color: #15803d !important;
+  color: #f0fdf4 !important;
+}
+
+/* Use black text on enabled green Popup toggles for stronger contrast. */
+html.dark .popup-toggle-label--enabled { color: #000 !important; }
+
+/* Fallback for already-rendered enabled Popup toggles. */
+html.dark button.bg-green-500 > span.text-white { color: #000 !important; }
+
+/* Carry the light-theme green language into dark-mode theme selectors. */
+html.dark .theme-option--selected,
+html.dark [role="group"] > .bg-green-50.text-green-700 {
+  background-color: #166534 !important;
+  color: #dcfce7 !important;
+}
+html.dark .theme-option:not(.theme-option--selected):hover,
+html.dark [role="group"] > .text-gray-500.hover\:bg-gray-200:hover {
+  background-color: #262626 !important;
+  color: #f5f5f5 !important;
+}
+
+/* Keep the active Response Body view clear in dark mode. */
+html.dark .response-body-view-option--selected {
+    background-color: #22c55e !important;
+    color: #141515 !important;
+}
+
+/* Keep the dashboard tab-close control aligned with its white-theme hover state. */
+html.dark .hover\:bg-red-100:hover { background-color: #fee2e2 !important; }
+html.dark .hover\:text-red-600:hover { color: #dc2626 !important; }
+
+/* Keep selected Mock response modes bright and legible in dark mode. */
+html.dark .mock-mode-option--selected {
+  background-color: #14311d !important;
+  color: #15803d !important;
+}
+
+/* Brighten only the active Mock-rule name and URL, not other shared lists. */
+html.dark .mock-rule-list .text-green-900,
+html.dark .mock-rule-list .text-green-700\/70 {
+  color: #44ce76 !important;
+}
+
+/* Keep Mock-rule status dots visibly red without changing other dark-theme controls. */
+html.dark .mock-rule-list .bg-red-50 { background-color: #3f1d1d !important; }
+html.dark .mock-rule-list .bg-red-500 { background-color: #f87171 !important; }
+html.dark .mock-rule-list .bg-red-300 { background-color: #fca5a5 !important; }
+
+/* Preserve the light-mode red activation treatment in the Mock-list toolbar. */
+html.dark button.bg-red-50.text-red-600.border-red-200 {
+  background-color: #fef2f236 !important;
+  border-color: #7d3c3c !important;
+  color: #dc2626 !important;
+}
+html.dark button.bg-red-50.text-red-600.border-red-200 > .bg-red-500 {
+  background-color: #ef4444 !important;
+}

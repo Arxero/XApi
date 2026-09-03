@@ -634,5 +634,17 @@
   "chineseSimplified": {
     "message": "Simplified Chinese",
     "description": "Simplified Chinese language option"
+  },
+  "theme": {
+    "message": "Theme",
+    "description": "Settings label for theme selection"
+  },
+  "lightMode": {
+    "message": "Light",
+    "description": "Light theme option"
+  },
+  "darkMode": {
+    "message": "Dark",
+    "description": "Dark theme option"
   }
 }
