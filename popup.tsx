@@ -457,11 +457,13 @@ const Popup = () => {
              </span>
              <Toggle on={globalHeadersEnabled} onClick={toggleHeadersEnabled} label={headerTabText} />
           </div>
+          {/* The Header toggle makes this behavior self-explanatory.
           <div className="global-header-hint px-3 py-2 bg-yellow-50 border-b border-yellow-100 flex-shrink-0">
              <span className="text-[10px] text-yellow-700 leading-tight block">
                 {chrome.i18n.getMessage("globalHeaderHint") || 'When enabled, every XHR/Fetch request will carry the enabled headers.'}
              </span>
           </div>
+          */}
           <div className="flex-1 overflow-y-auto bg-gray-100">
             {globalHeaders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-2 bg-gray-50 px-6 text-center">
