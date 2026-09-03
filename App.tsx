@@ -78,7 +78,6 @@ const App: React.FC = () => {
   const [curlInput, setCurlInput] = useState('');
   const [mockRules, setMockRules] = useState<MockRule[]>([]);
   const [mockGlobalEnabled, setMockGlobalEnabled] = useState(false);
-  const [language, setLanguage] = useState<AppLanguage>('system');
   const [languageVersion, setLanguageVersion] = useState(0);
   const initializedRef = useRef(false);
 
@@ -91,7 +90,6 @@ const App: React.FC = () => {
 
   const refreshLanguage = (next: AppLanguage) => {
       applyLanguage(next);
-      setLanguage(next);
       setLanguageVersion(v => v + 1);
       setTabs(prev => prev.map(t => t.type === 'welcome' ? { ...t, title: chrome.i18n.getMessage("welcomeTabTitle") } : t));
   };
@@ -146,7 +144,7 @@ const App: React.FC = () => {
         if (changes[MOCK_GLOBAL_ENABLED_KEY]) setMockGlobalEnabled(changes[MOCK_GLOBAL_ENABLED_KEY].newValue === true);
         if (changes[LANGUAGE_STORAGE_KEY]) {
           const nextLanguage = changes[LANGUAGE_STORAGE_KEY].newValue;
-          const normalized = nextLanguage === 'en' || nextLanguage === 'zh_CN' ? nextLanguage : 'system';
+          const normalized = nextLanguage === 'en' || nextLanguage === 'zh_CN' ? nextLanguage : 'en';
           refreshLanguage(normalized);
         }
       };
@@ -240,11 +238,6 @@ const App: React.FC = () => {
       const next = !mockGlobalEnabled;
       setMockGlobalEnabled(next);
       chrome.storage.local.set({ [MOCK_GLOBAL_ENABLED_KEY]: next });
-  };
-
-  const handleLanguageChange = (next: AppLanguage) => {
-      refreshLanguage(next);
-      chrome.storage.local.set({ [LANGUAGE_STORAGE_KEY]: next });
   };
 
   const handleMockFromLog = (log: LoggedRequest) => {
@@ -556,8 +549,6 @@ const App: React.FC = () => {
           onToggleRecording={() => { setIsRecording(!isRecording); chrome.storage.local.set({ isRecording: !isRecording }); }}
           onCollapseSidebar={() => setIsSidebarCollapsed(true)}
           onResetAllData={handleClearAllData}
-          language={language}
-          onLanguageChange={handleLanguageChange}
           mockRules={mockRules}
           mockGlobalEnabled={mockGlobalEnabled}
           onSelectMockRule={openMockRuleInTab}

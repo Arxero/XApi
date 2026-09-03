@@ -6,7 +6,6 @@ import { Logo } from './Logo';
 import { APP_CONFIG } from '../config';
 import { MockList } from './MockList';
 import { ListItem } from './ListItem';
-import type { AppLanguage } from '../i18n';
 
 interface SidebarProps {
   activeTab: SidebarTab;
@@ -36,8 +35,6 @@ interface SidebarProps {
   onToggleRecording?: () => void;
   onCollapseSidebar: () => void;
   onResetAllData: () => void;
-  language: AppLanguage;
-  onLanguageChange: (language: AppLanguage) => void;
   // mock
   mockRules: MockRule[];
   mockGlobalEnabled: boolean;
@@ -69,7 +66,7 @@ const copyToClipboard = (text: string): boolean => {
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  activeTab, onTabChange, history, onImportLoggedRequest, collections, rootRequests, tabs, activeRequestId, activeCapturedId, activeMockRuleId, onSelectRequest, onCreateCollection, onCreateRequest, onImportCurl, onClearHistory, onDeleteLog, onRenameCollection, onRenameRequest, onDeleteCollection, onDeleteRequest, onDuplicateRequest, onToggleCollapse, onMoveRequest, isRecording, onToggleRecording, onCollapseSidebar, onResetAllData, language, onLanguageChange,
+  activeTab, onTabChange, history, onImportLoggedRequest, collections, rootRequests, tabs, activeRequestId, activeCapturedId, activeMockRuleId, onSelectRequest, onCreateCollection, onCreateRequest, onImportCurl, onClearHistory, onDeleteLog, onRenameCollection, onRenameRequest, onDeleteCollection, onDeleteRequest, onDuplicateRequest, onToggleCollapse, onMoveRequest, isRecording, onToggleRecording, onCollapseSidebar, onResetAllData,
   mockRules, mockGlobalEnabled, onSelectMockRule, onCreateMockRule, onToggleMockGlobal, onToggleMockRule, onDeleteMockRule, onDuplicateMockRule, onClearMockRules, onRenameMockRule, onMockFromLog
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'collection' | 'request' | 'log', id: string, data?: any } | null>(null);
@@ -185,10 +182,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const githubRepositoryText = chrome.i18n.getMessage("githubRepository");
   const sendFeedbackText = chrome.i18n.getMessage("sendFeedback");
   const resetWorkspaceText = chrome.i18n.getMessage("resetWorkspace");
-  const languageText = chrome.i18n.getMessage("language") || 'Language';
-  const systemLanguageText = chrome.i18n.getMessage("systemLanguage") || 'System';
-  const englishText = chrome.i18n.getMessage("english") || 'English';
-  const chineseText = chrome.i18n.getMessage("chineseSimplified") || '简体中文';
 
   return (
     <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200 w-72 flex-shrink-0 relative select-none">
@@ -225,19 +218,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             <svg className="w-3.5 h-3.5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" strokeWidth={2}/></svg>
                             {sendFeedbackText}
                         </a>
-                        <div className="px-4 py-2 border-t border-gray-100">
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">{languageText}</label>
-                            <select
-                                value={language}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => onLanguageChange(e.target.value as AppLanguage)}
-                                className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:border-green-500"
-                            >
-                                <option value="system">{systemLanguageText}</option>
-                                <option value="en">{englishText}</option>
-                                <option value="zh_CN">{chineseText}</option>
-                            </select>
-                        </div>
                         <div className="h-px bg-gray-100 my-1"></div>
                         <button
                             onClick={(e) => { e.stopPropagation(); onResetAllData(); setIsSettingsOpen(false); }}

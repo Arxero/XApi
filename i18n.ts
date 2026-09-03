@@ -30,4 +30,4 @@ export const applyLanguage = (language: AppLanguage) => {
   }) as typeof chrome.i18n.getMessage;
 };
 
-applyLanguage('system');
+applyLanguage('en');

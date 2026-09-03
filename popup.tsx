@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { applyLanguage, LANGUAGE_STORAGE_KEY } from './i18n';
-import type { AppLanguage } from './i18n';
 import { LoggedRequest, MockRule, GlobalHeader } from './types';
 import { formatUrl, formatTime, getMethodBadgeColor, generateId } from './utils';
 import {
@@ -29,7 +28,6 @@ const Popup = () => {
   const [globalHeadersEnabled, setGlobalHeadersEnabled] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [languageVersion, setLanguageVersion] = useState(0);
-  const [language, setLanguage] = useState<AppLanguage>('system');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -48,10 +46,6 @@ const Popup = () => {
   const settingsText = chrome.i18n.getMessage("settings") || 'Settings';
   const githubRepositoryText = chrome.i18n.getMessage("githubRepository") || 'GitHub Repository';
   const sendFeedbackText = chrome.i18n.getMessage("sendFeedback") || 'Send Feedback';
-  const languageText = chrome.i18n.getMessage("language") || 'Language';
-  const systemLanguageText = chrome.i18n.getMessage("systemLanguage") || 'System';
-  const englishText = chrome.i18n.getMessage("english") || 'English';
-  const chineseText = chrome.i18n.getMessage("chinese") || '中文';
   const resetWorkspaceText = chrome.i18n.getMessage("resetWorkspace") || 'Reset Workspace';
 
   useEffect(() => {
@@ -63,7 +57,6 @@ const Popup = () => {
           const storedLanguage = result[LANGUAGE_STORAGE_KEY];
           if (storedLanguage === 'en' || storedLanguage === 'zh_CN') {
             applyLanguage(storedLanguage);
-            setLanguage(storedLanguage);
             setLanguageVersion(v => v + 1);
           }
           const savedTab = result[POPUP_ACTIVE_TAB_KEY];
@@ -99,9 +92,8 @@ const Popup = () => {
          }
          if (changes[LANGUAGE_STORAGE_KEY]) {
             const nextLanguage = changes[LANGUAGE_STORAGE_KEY].newValue;
-            const normalized = nextLanguage === 'en' || nextLanguage === 'zh_CN' ? nextLanguage : 'system';
+            const normalized = nextLanguage === 'en' || nextLanguage === 'zh_CN' ? nextLanguage : 'en';
             applyLanguage(normalized);
-            setLanguage(normalized);
             setLanguageVersion(v => v + 1);
          }
       };
@@ -126,13 +118,6 @@ const Popup = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleLanguageChange = (next: AppLanguage) => {
-    applyLanguage(next);
-    setLanguage(next);
-    setLanguageVersion(v => v + 1);
-    chrome.storage.local.set({ [LANGUAGE_STORAGE_KEY]: next });
-  };
 
   const handleResetAllData = () => {
     if (confirm(chrome.i18n.getMessage("clearAllDataConfirm") || 'Reset all data?')) {
@@ -253,19 +238,6 @@ const Popup = () => {
                      <svg className="w-3.5 h-3.5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" strokeWidth={2}/></svg>
                      {sendFeedbackText}
                   </a>
-                  <div className="px-4 py-2 border-t border-gray-100">
-                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">{languageText}</label>
-                     <select
-                        value={language}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => handleLanguageChange(e.target.value as AppLanguage)}
-                        className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:border-green-500"
-                     >
-                        <option value="system">{systemLanguageText}</option>
-                        <option value="en">{englishText}</option>
-                        <option value="zh_CN">{chineseText}</option>
-                     </select>
-                  </div>
                   <div className="h-px bg-gray-100 my-1"></div>
                   <button
                      onClick={(e) => { e.stopPropagation(); handleResetAllData(); setIsSettingsOpen(false); }}
