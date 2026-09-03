@@ -228,7 +228,7 @@ const Popup = () => {
     }`;
 
   return (
-    <div key={languageVersion} className="w-80 bg-white flex flex-col h-[500px]">
+    <div key={languageVersion} className="w-[400px] bg-white flex flex-col h-[500px]">
       {/* Header */}
       <div className="px-4 py-3 bg-gray-900 text-white flex justify-between items-center shadow-md flex-shrink-0">
          <Logo size={18} textColor="text-white" />
@@ -473,7 +473,7 @@ const Popup = () => {
                                    value={h.key}
                                    onChange={(e) => updateHeader(h.id, { key: e.target.value })}
                                    placeholder={chrome.i18n.getMessage("headerKeyPlaceholder") || 'Header'}
-                                   className="w-1/2 text-[11px] px-1.5 py-1 bg-white border border-gray-300 rounded focus:outline-none focus:border-green-500 font-mono"
+                                   className="flex-1 min-w-0 text-[11px] px-1.5 py-1 bg-white border border-gray-300 rounded focus:outline-none focus:border-green-500 font-mono"
                                 />
                                 <input
                                    type="text"
@@ -481,6 +481,13 @@ const Popup = () => {
                                    onChange={(e) => updateHeader(h.id, { value: e.target.value })}
                                    placeholder={chrome.i18n.getMessage("headerValuePlaceholder") || 'Value'}
                                    className="flex-1 min-w-0 text-[11px] px-1.5 py-1 bg-white border border-gray-300 rounded focus:outline-none focus:border-green-500 font-mono"
+                                />
+                                <input
+                                   type="text"
+                                   value={h.name || ''}
+                                   onChange={(e) => updateHeader(h.id, { name: e.target.value })}
+                                   placeholder={chrome.i18n.getMessage("headerName") || 'Name'}
+                                   className="flex-1 min-w-0 text-[11px] px-1.5 py-1 bg-white border border-gray-300 rounded focus:outline-none focus:border-green-500"
                                 />
                                 <button
                                    onClick={() => removeHeader(h.id)}

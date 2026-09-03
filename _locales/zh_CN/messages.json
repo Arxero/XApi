@@ -435,6 +435,10 @@
     "message": "名称",
     "description": "请求头名称输入框占位符"
   },
+  "headerName": {
+    "message": "名称",
+    "description": "全局请求头可选显示名称的占位符"
+  },
   "headerValuePlaceholder": {
     "message": "值",
     "description": "请求头值输入框占位符"

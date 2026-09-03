@@ -435,6 +435,10 @@
     "message": "Header",
     "description": "Placeholder for the header name input"
   },
+  "headerName": {
+    "message": "Name",
+    "description": "Placeholder for the optional global header display name"
+  },
   "headerValuePlaceholder": {
     "message": "Value",
     "description": "Placeholder for the header value input"

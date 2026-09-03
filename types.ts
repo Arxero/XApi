@@ -29,6 +29,7 @@ export interface HttpRequest {
 // Global request headers injected into every XHR/Fetch request via DNR.
 export interface GlobalHeader {
   id: string;
+  name?: string; // Optional display name; not sent with the request.
   key: string;
   value: string;
   enabled: boolean;
