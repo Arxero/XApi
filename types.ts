@@ -70,8 +70,8 @@ export interface LoggedRequest {
 export type SidebarTab = 'collections' | 'history' | 'mock';
 
 // ============== Mock Rules (Modify Response) ==============
-export type RuleMatchMode = 'startsWith';
-export type MockMode = 'replace' | 'patch-json';
+export type RuleMatchMode = 'exact' | 'startsWith';
+export type MockMode = 'replace' | 'replace-body' | 'patch-json';
 
 export interface JsonPatch {
   id: string;
@@ -92,6 +92,7 @@ export interface MockRule {
   mode: MockMode;
   // mode = 'replace'
   replaceStatus?: number;
+  // modes = 'replace' | 'replace-body'
   replaceContentType?: string;
   replaceBody?: string;
   // mode = 'patch-json'

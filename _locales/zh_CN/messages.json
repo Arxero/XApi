@@ -509,7 +509,15 @@
   },
   "mockMatchMode": {
     "message": "匹配方式",
-    "description": "匹配方式分段控制器标签"
+    "description": "URL 匹配方式选择器标签"
+  },
+  "mockMatchExact": {
+    "message": "完全匹配",
+    "description": "仅匹配完整 URL 的模式"
+  },
+  "mockMatchStartsWith": {
+    "message": "前缀匹配",
+    "description": "匹配所有以该模式开头的 URL"
   },
   "mockMethod": {
     "message": "请求方法",
@@ -518,6 +526,14 @@
   "mockModeReplace": {
     "message": "整体替换返回结果",
     "description": "Mock 模式：直接替换整个响应"
+  },
+  "mockModeReplaceBody": {
+    "message": "替换响应内容",
+    "description": "Mock 模式：发送真实请求并仅替换响应内容"
+  },
+  "mockModeReplaceBodyHint": {
+    "message": "发送真实请求，然后仅替换其响应内容。",
+    "description": "透传响应内容替换模式的提示"
   },
   "mockModePatchJson": {
     "message": "修改 JSON 字段",

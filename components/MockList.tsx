@@ -142,7 +142,9 @@ export const MockList: React.FC<MockListProps> = ({
                   methodColorClass={getMethodColor(r.method === 'ANY' ? '' : r.method)}
                   metaExtras={
                     <>
-                      <span className="text-[10px] text-gray-400 uppercase">{r.mode === 'replace' ? 'replace' : 'patch'}</span>
+                      <span className="text-[10px] text-gray-400 uppercase">
+                        {r.mode === 'replace' ? 'replace' : r.mode === 'replace-body' ? 'body' : 'patch'}
+                      </span>
                       <span className="text-[9px] text-gray-400 ml-1">{hitsLabel}: {r.hitCount || 0}</span>
                     </>
                   }

@@ -3,9 +3,9 @@ import { generateId } from './utils';
 
 // ============== Rule matching ==============
 
-export const matchUrl = (url: string, pattern: string, _mode: RuleMatchMode): boolean => {
+export const matchUrl = (url: string, pattern: string, mode: RuleMatchMode): boolean => {
   if (!pattern) return false;
-  return url.startsWith(pattern);
+  return mode === 'exact' ? url === pattern : url.startsWith(pattern);
 };
 
 export const matchRule = (
@@ -206,7 +206,7 @@ export const createMockRule = (partial?: Partial<MockRule>): MockRule => ({
   name: 'New Mock Rule',
   enabled: true,
   urlPattern: '',
-  matchMode: 'startsWith',
+  matchMode: 'exact',
   method: 'ANY',
   mode: 'replace',
   replaceStatus: 200,

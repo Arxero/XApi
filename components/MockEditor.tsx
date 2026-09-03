@@ -181,11 +181,11 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
 
   const jsonHint = useMemo(() => tryFormatJson(rule.replaceBody || ''), [rule.replaceBody]);
 
-  // Get JSON path autocomplete options from a sample request body if available.
-  // (We don't have response bodies stored in history, but we render hints from body if it's JSON.)
+  // Derive JSON path suggestions from a captured response body when available,
+  // falling back to the request body for older history entries.
   const pathOptions = useMemo(() => {
     if (!sampleData) return [];
-    let body: any = sampleData.requestBody;
+    let body: any = sampleData.responseBody ?? sampleData.requestBody;
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch { body = null; }
     }
@@ -220,6 +220,8 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
   const urlPatternPh = t('mockUrlPatternPlaceholder', 'e.g. https://api.example.com/user');
   const methodLabel = t('mockMethod', 'Method');
   const modeReplace = t('mockModeReplace', 'Replace whole response');
+  const modeReplaceBody = t('mockModeReplaceBody', 'Replace response body');
+  const modeReplaceBodyHint = t('mockModeReplaceBodyHint', 'Sends the real request, then replaces only its response body.');
   const modePatch = t('mockModePatchJson', 'Modify JSON fields');
   const statusLabel = t('mockStatus', 'Status');
   const ctLabel = t('mockContentType', 'Content-Type');
@@ -236,7 +238,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
 
   const fillFromHistory = () => {
     if (!sampleData) return;
-    let body: any = sampleData.requestBody;
+    let body: any = sampleData.responseBody ?? sampleData.requestBody;
     if (typeof body === 'object' && body) body = JSON.stringify(body, null, 2);
     update({ replaceBody: typeof body === 'string' ? body : (rule.replaceBody || '') });
   };
@@ -257,6 +259,17 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
                   className="w-full text-xs border border-gray-200 hover:border-gray-300 focus:border-green-500 rounded px-2 py-1.5 focus:outline-none bg-white transition-colors"
                 >
                   {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="w-32 flex-shrink-0">
+                <div className="text-[11px] text-gray-500 mb-1">{t('mockMatchMode', 'Match')}</div>
+                <select
+                  value={rule.matchMode || 'startsWith'}
+                  onChange={e => update({ matchMode: e.target.value as MockRule['matchMode'] })}
+                  className="w-full text-xs border border-gray-200 hover:border-gray-300 focus:border-green-500 rounded px-2 py-1.5 focus:outline-none bg-white transition-colors"
+                >
+                  <option value="exact">{t('mockMatchExact', 'Exact')}</option>
+                  <option value="startsWith">{t('mockMatchStartsWith', 'Starts with')}</option>
                 </select>
               </div>
               <div className="flex-1 min-w-0">
@@ -280,23 +293,33 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
             <ModeRadio active={rule.mode === 'replace'} onClick={() => update({ mode: 'replace' })}>
               {modeReplace}
             </ModeRadio>
+            <ModeRadio active={rule.mode === 'replace-body'} onClick={() => update({ mode: 'replace-body' })}>
+              {modeReplaceBody}
+            </ModeRadio>
             <ModeRadio active={rule.mode === 'patch-json'} onClick={() => update({ mode: 'patch-json' })}>
               {modePatch}
             </ModeRadio>
           </div>
 
-          {rule.mode === 'replace' && (
+          {(rule.mode === 'replace' || rule.mode === 'replace-body') && (
             <div className="space-y-2">
-              <div className="flex space-x-3">
-                <div className="w-32">
-                  <div className="text-[11px] text-gray-500 mb-1">{statusLabel}</div>
-                  <input
-                    type="number"
-                    value={rule.replaceStatus ?? 200}
-                    onChange={e => update({ replaceStatus: parseInt(e.target.value || '200', 10) })}
-                    className="w-full text-xs border border-gray-200 hover:border-gray-300 focus:border-green-500 rounded px-2 py-1.5 focus:outline-none transition-colors"
-                  />
+              {rule.mode === 'replace-body' && (
+                <div className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                  {modeReplaceBodyHint}
                 </div>
+              )}
+              <div className="flex space-x-3">
+                {rule.mode === 'replace' && (
+                  <div className="w-32">
+                    <div className="text-[11px] text-gray-500 mb-1">{statusLabel}</div>
+                    <input
+                      type="number"
+                      value={rule.replaceStatus ?? 200}
+                      onChange={e => update({ replaceStatus: parseInt(e.target.value || '200', 10) })}
+                      className="w-full text-xs border border-gray-200 hover:border-gray-300 focus:border-green-500 rounded px-2 py-1.5 focus:outline-none transition-colors"
+                    />
+                  </div>
+                )}
                 <div className="flex-1">
                   <div className="text-[11px] text-gray-500 mb-1">{ctLabel}</div>
                   <input

@@ -34,10 +34,11 @@ Inject or override request headers across every XHR/Fetch call, without editing 
 When replaying a single request, XApi can override restricted headers (`Cookie`, `Origin`, `Referer`) that standard page scripts are blocked from setting, so replayed requests faithfully reproduce the original call.
 
 ### Mock and response override
-Intercept live requests and serve custom responses without touching the backend — useful for front-end development, edge-case testing, and reproducing bugs.
+Intercept live requests and override responses either offline or after the real backend responds — useful for front-end development, edge-case testing, and reproducing bugs.
 
 - **URL matching**: rules match by URL prefix (`startsWith`) and HTTP method (`GET` / `POST` / `PUT` / `DELETE` / `ANY`).
-- **Replace mode**: fully override the response with a custom status code, `Content-Type`, and body (JSON, text, HTML, etc.).
+- **Replace mode**: fully override the response with a custom status code, `Content-Type`, and body (JSON, text, HTML, etc.) without contacting the backend.
+- **Replace response body mode**: send the real request, preserve its status and safe headers, then replace only the body. This is useful when applications depend on the normal Fetch/XHR lifecycle.
 - **JSON Patch mode**: keep the original response and surgically modify specific fields via JSON paths (e.g. `data.user.name`, `data.list[0].id`). Use the `::raw::` prefix to inject numbers, booleans, `null`, or nested JSON.
 - **One-click mock from capture**: right-click any captured response and choose *"Mock this response"* to auto-generate a rule pre-filled with the current payload.
 - **Per-rule toggle and global switch**: enable or disable individual rules, or flip the global mock master switch. Hit counters and last-hit timestamps confirm rules are firing.

@@ -14,8 +14,8 @@
  * an IIFE keeps every binding scoped to this function. Do NOT remove.
  */
 
-type RuleMatchMode = 'startsWith';
-type MockMode = 'replace' | 'patch-json';
+type RuleMatchMode = 'exact' | 'startsWith';
+type MockMode = 'replace' | 'replace-body' | 'patch-json';
 
 interface JsonPatch {
   id: string;
@@ -108,9 +108,9 @@ const normalizeUrl = (url: string): string => {
 };
 
 // ----- match ------
-const matchUrl = (url: string, pattern: string, _mode: RuleMatchMode): boolean => {
+const matchUrl = (url: string, pattern: string, mode: RuleMatchMode): boolean => {
   if (!pattern) return false;
-  return url.startsWith(pattern);
+  return mode === 'exact' ? url === pattern : url.startsWith(pattern);
 };
 
 const matchRule = (url: string, method: string): MockRule | undefined => {
@@ -190,6 +190,47 @@ const buildReplaceResponse = (rule: MockRule): Response => {
   });
 };
 
+const BODYLESS_STATUSES = new Set([204, 205, 304]);
+const INVALIDATED_BODY_HEADERS = [
+  'content-length',
+  'content-encoding',
+  'transfer-encoding',
+  'etag',
+  'digest',
+  'content-md5',
+  'content-range'
+];
+
+const buildReplaceBodyResponse = (res: Response, rule: MockRule, method: string): Response | undefined => {
+  if (method === 'HEAD' || res.status === 0 || res.type === 'opaque' || BODYLESS_STATUSES.has(res.status)) {
+    return undefined;
+  }
+
+  const headers = new Headers(res.headers);
+  for (const name of INVALIDATED_BODY_HEADERS) headers.delete(name);
+  if (rule.replaceContentType) headers.set('content-type', rule.replaceContentType);
+  headers.set('x-xapi-mock', rule.id);
+
+  const replacement = new Response(rule.replaceBody ?? '', {
+    status: res.status,
+    statusText: res.statusText,
+    headers
+  });
+
+  // Response() cannot initialize these read-only network metadata fields.
+  // Preserve them where the browser allows own-property overrides.
+  for (const key of ['url', 'redirected', 'type'] as const) {
+    try {
+      Object.defineProperty(replacement, key, {
+        configurable: true,
+        value: res[key]
+      });
+    } catch { /* best effort */ }
+  }
+
+  return replacement;
+};
+
 // ----- fetch patch -----
 const _fetch = window.fetch;
 window.fetch = async function patchedFetch(input: RequestInfo | URL, init?: RequestInit) {
@@ -227,8 +268,24 @@ window.fetch = async function patchedFetch(input: RequestInfo | URL, init?: Requ
     return buildReplaceResponse(rule);
   }
 
-  // patch-json: pass through, then rewrite body if JSON
   const res = await _fetch.call(window, input as any, init);
+
+  if (rule.mode === 'replace-body') {
+    const replacement = buildReplaceBodyResponse(res, rule, method);
+    if (!replacement) return res;
+
+    // Release the unread upstream body. The application consumes the closed
+    // replacement stream instead, while the real request lifecycle is kept.
+    try { res.body?.cancel().catch(() => { /* noop */ }); } catch { /* noop */ }
+    reportHit(rule.id);
+    console.debug(`${TAG} replace-body`, method, url, '→', rule.name);
+    return replacement;
+  }
+
+  // Unknown persisted modes must fail open instead of being treated as JSON patches.
+  if (rule.mode !== 'patch-json') return res;
+
+  // patch-json: pass through, then rewrite body if JSON
   const ct = res.headers.get('content-type') || '';
   if (!ct.toLowerCase().includes('json')) return res;
   let data: any;
@@ -322,6 +379,64 @@ const fakeXhrResponse = (xhr: XMLHttpRequest, rule: MockRule, body: string, stat
   }, 0);
 };
 
+const replaceXhrResponseBody = (xhr: XMLHttpRequest, rule: MockRule, method: string): boolean => {
+  if (method === 'HEAD' || xhr.status === 0 || BODYLESS_STATUSES.has(xhr.status)) return false;
+
+  const body = rule.replaceBody ?? '';
+  const responseType = xhr.responseType || '';
+  let response: any = body;
+
+  if (responseType === 'json') {
+    try { response = body ? JSON.parse(body) : null; } catch { return false; }
+  } else if (responseType !== '' && responseType !== 'text') {
+    return false;
+  }
+
+  try {
+    if (responseType !== 'json') {
+      Object.defineProperty(xhr, 'responseText', { configurable: true, get: () => body });
+    }
+    Object.defineProperty(xhr, 'response', { configurable: true, get: () => response });
+  } catch {
+    return false;
+  }
+
+  // Preserve upstream headers except values invalidated by changing the body.
+  try {
+    const originalGetHeader = xhr.getResponseHeader.bind(xhr);
+    const originalGetAllHeaders = xhr.getAllResponseHeaders.bind(xhr);
+    const contentType = rule.replaceContentType || originalGetHeader('content-type') || '';
+    const invalidated = new Set(INVALIDATED_BODY_HEADERS);
+    const headerLines = originalGetAllHeaders()
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .filter(line => {
+        const name = line.slice(0, line.indexOf(':')).trim().toLowerCase();
+        return !invalidated.has(name) && name !== 'content-type' && name !== 'x-xapi-mock';
+      });
+    if (contentType) headerLines.push(`content-type: ${contentType}`);
+    headerLines.push(`x-xapi-mock: ${rule.id}`);
+    const allHeaders = `${headerLines.join('\r\n')}\r\n`;
+
+    Object.defineProperty(xhr, 'getAllResponseHeaders', {
+      configurable: true,
+      value: () => allHeaders
+    });
+    Object.defineProperty(xhr, 'getResponseHeader', {
+      configurable: true,
+      value: (name: string) => {
+        const lower = name.toLowerCase();
+        if (invalidated.has(lower)) return null;
+        if (lower === 'content-type') return contentType || null;
+        if (lower === 'x-xapi-mock') return rule.id;
+        return originalGetHeader(name);
+      }
+    });
+  } catch { /* body replacement still succeeded */ }
+
+  return true;
+};
+
 XHR.prototype.send = function (this: XMLHttpRequest, body?: any) {
   const meta = META.get(this);
   const rule = meta ? matchRule(meta.url, meta.method) : undefined;
@@ -364,6 +479,29 @@ XHR.prototype.send = function (this: XMLHttpRequest, body?: any) {
     );
     return;
   }
+
+  if (rule.mode === 'replace-body') {
+    const xhr = this;
+    let replaced = false;
+    const tryReplace = () => {
+      if (replaced || xhr.readyState !== 4) return;
+      replaced = replaceXhrResponseBody(xhr, rule, meta!.method);
+      if (!replaced) return;
+      reportHit(rule.id);
+      console.debug(`${TAG} replace-body(xhr)`, meta!.method, meta!.url, '→', rule.name);
+    };
+
+    // Capture listeners run before the page's normal listeners at the target,
+    // allowing consumers to observe the replacement during their load callback.
+    try {
+      xhr.addEventListener('readystatechange', tryReplace, true);
+      xhr.addEventListener('load', tryReplace, true);
+    } catch { /* native XHR always supports EventTarget */ }
+    return origSend.call(this, body);
+  }
+
+  // Unknown persisted modes must fail open.
+  if (rule.mode !== 'patch-json') return origSend.call(this, body);
 
   // patch-json: let the request go, then mutate response on load
   const xhr = this;

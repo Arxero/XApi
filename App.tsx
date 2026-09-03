@@ -249,14 +249,9 @@ const App: React.FC = () => {
 
   const handleMockFromLog = (log: LoggedRequest) => {
       const latestLog = history.find(item => item.id === log.id) || log;
-      // Build a starter rule from a captured request. Keep host+path so
-      // cross-origin patterns still match; drop the query string so the
-      // startsWith pattern survives differing query orders.
-      let urlPattern = latestLog.url;
-      try {
-          const u = new URL(latestLog.url);
-          urlPattern = `${u.protocol}//${u.host}${u.pathname}` || latestLog.url;
-      } catch { /* noop */ }
+      // Captured requests create strict, full-URL rules by default. Prefix
+      // matching remains available only when the user explicitly selects it.
+      const urlPattern = latestLog.url;
 
       // If the captured response is JSON, prefer patch-json mode and pre-fill
       // every leaf field as an enabled patch row. Falls back to replace mode
@@ -280,7 +275,7 @@ const App: React.FC = () => {
       const r = createMockRule({
           name: urlPattern,
           urlPattern,
-          matchMode: 'startsWith',
+          matchMode: 'exact',
           method: (latestLog.method?.toUpperCase() as any) || 'ANY',
           mode,
           replaceBody,

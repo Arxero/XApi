@@ -509,7 +509,15 @@
   },
   "mockMatchMode": {
     "message": "Match",
-    "description": "Label for the match mode segmented control"
+    "description": "Label for the URL match mode selector"
+  },
+  "mockMatchExact": {
+    "message": "Exact",
+    "description": "URL match mode that only matches the complete URL"
+  },
+  "mockMatchStartsWith": {
+    "message": "Starts with",
+    "description": "URL match mode that also matches URLs beginning with the pattern"
   },
   "mockMethod": {
     "message": "Method",
@@ -518,6 +526,14 @@
   "mockModeReplace": {
     "message": "Replace whole response",
     "description": "Mock mode option: replace entire response"
+  },
+  "mockModeReplaceBody": {
+    "message": "Replace response body",
+    "description": "Mock mode option: send the real request and replace only its response body"
+  },
+  "mockModeReplaceBodyHint": {
+    "message": "Sends the real request, then replaces only its response body.",
+    "description": "Warning shown for pass-through response-body replacement"
   },
   "mockModePatchJson": {
     "message": "Modify JSON fields",
