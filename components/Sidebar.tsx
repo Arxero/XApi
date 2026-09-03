@@ -237,12 +237,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="flex text-xs font-bold border-b border-gray-200 bg-white uppercase tracking-wider">
+        <button onClick={() => onTabChange('mock')} className={`flex-1 py-2 text-center transition-all ${activeTab === 'mock' ? 'text-green-600 border-b-2 border-green-500 bg-green-50/30' : 'text-gray-400 hover:text-gray-600'}`}>
+            {chrome.i18n.getMessage("mockTab") || 'Mock'} ({mockRules.length})
+        </button>
         <button onClick={() => onTabChange('collections')} className={`flex-1 py-2 text-center transition-all ${activeTab === 'collections' ? 'text-green-600 border-b-2 border-green-500 bg-green-50/30' : 'text-gray-400 hover:text-gray-600'}`}>{collectionsText}</button>
         <button onClick={() => onTabChange('history')} className={`flex-1 py-2 text-center transition-all ${activeTab === 'history' ? 'text-green-600 border-b-2 border-green-500 bg-green-50/30' : 'text-gray-400 hover:text-gray-600'}`}>
             {capturedText} ({history.length})
-        </button>
-        <button onClick={() => onTabChange('mock')} className={`flex-1 py-2 text-center transition-all ${activeTab === 'mock' ? 'text-green-600 border-b-2 border-green-500 bg-green-50/30' : 'text-gray-400 hover:text-gray-600'}`}>
-            {chrome.i18n.getMessage("mockTab") || 'Mock'} ({mockRules.length})
         </button>
       </div>
 

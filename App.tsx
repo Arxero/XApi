@@ -68,7 +68,7 @@ const convertLogToRequest = (log: LoggedRequest): HttpRequest => {
 const App: React.FC = () => {
   const [tabs, setTabs] = useState<TabItem[]>([{ id: 'welcome', type: 'welcome', title: chrome.i18n.getMessage("welcomeTabTitle") }]);
   const [activeTabId, setActiveTabId] = useState<string>('welcome');
-  const [sidebarTab, setSidebarTab] = useState<SidebarTab>('history');
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>('mock');
   const [history, setHistory] = useState<LoggedRequest[]>([]);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
   const [rootRequests, setRootRequests] = useState<HttpRequest[]>([]);
