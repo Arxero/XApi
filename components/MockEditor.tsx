@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { HttpMethod, JsonPatch, LoggedRequest, MockMode, MockRule } from '../types';
-import { collectJsonPaths, createJsonPatch } from '../mockUtils';
+import { collectJsonPaths, createJsonPatch, matchUrl } from '../mockUtils';
 import { JsonTree } from './JsonTree';
 
 interface MockEditorProps {
@@ -175,7 +175,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
   // Find sample real responses for this URL pattern (best-effort).
   const sampleData = useMemo(() => {
     if (!rule.urlPattern) return null;
-    const matched = history.find(h => h.url.startsWith(rule.urlPattern));
+    const matched = history.find(h => matchUrl(h.url, rule.urlPattern, rule.matchMode || 'startsWith'));
     return matched || null;
   }, [history, rule.urlPattern, rule.matchMode]);
 
@@ -268,6 +268,7 @@ export const MockEditor: React.FC<MockEditorProps> = ({ rule, history, onRuleCha
                   onChange={e => update({ matchMode: e.target.value as MockRule['matchMode'] })}
                   className="w-full text-xs border border-gray-200 hover:border-gray-300 focus:border-green-500 rounded px-2 py-1.5 focus:outline-none bg-white transition-colors"
                 >
+                  <option value="contains">{t('mockMatchContains', 'Domain contains')}</option>
                   <option value="exact">{t('mockMatchExact', 'Exact')}</option>
                   <option value="startsWith">{t('mockMatchStartsWith', 'Starts with')}</option>
                 </select>

@@ -515,6 +515,10 @@
     "message": "匹配方式",
     "description": "URL 匹配方式选择器标签"
   },
+  "mockMatchContains": {
+    "message": "域名包含",
+    "description": "匹配配置域名或其任意子域名上的精确 URL 路径"
+  },
   "mockMatchExact": {
     "message": "完全匹配",
     "description": "仅匹配完整 URL 的模式"

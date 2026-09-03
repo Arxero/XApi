@@ -515,6 +515,10 @@
     "message": "Match",
     "description": "Label for the URL match mode selector"
   },
+  "mockMatchContains": {
+    "message": "Domain contains",
+    "description": "Matches the configured domain or any subdomain with an exact URL path"
+  },
   "mockMatchExact": {
     "message": "Exact",
     "description": "URL match mode that only matches the complete URL"

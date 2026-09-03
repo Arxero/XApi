@@ -5,7 +5,18 @@ import { generateId } from './utils';
 
 export const matchUrl = (url: string, pattern: string, mode: RuleMatchMode): boolean => {
   if (!pattern) return false;
-  return mode === 'exact' ? url === pattern : url.startsWith(pattern);
+  if (mode === 'exact') return url === pattern;
+  if (mode === 'contains') {
+    try {
+      const requestUrl = new URL(url);
+      const patternUrl = new URL(pattern);
+      const matchesDomain = requestUrl.hostname === patternUrl.hostname || requestUrl.hostname.endsWith(`.${patternUrl.hostname}`);
+      return requestUrl.protocol === patternUrl.protocol && requestUrl.port === patternUrl.port && matchesDomain && requestUrl.pathname === patternUrl.pathname;
+    } catch {
+      return false;
+    }
+  }
+  return url.startsWith(pattern);
 };
 
 export const matchRule = (
