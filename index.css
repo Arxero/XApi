@@ -237,10 +237,17 @@ html.dark .mock-mode-option--selected {
 }
 
 /* Brighten only the active Mock-rule name and URL, not other shared lists. */
-html.dark .mock-rule-list .text-green-900,
-html.dark .mock-rule-list .text-green-700\/70 {
+html.dark .mock-rule-list .text-green-900 {
   color: #44ce76 !important;
 }
+
+html.dark .mock-rule-list .text-green-700\/70 {
+  color: #38a660 !important;
+}
+
+/* Keep inactive Mock-rule names and URLs readable on the dark surface. */
+html.dark .mock-rule-list .text-slate-800 { color: #d4d4d4 !important; }
+html.dark .mock-rule-list .text-slate-500 { color: #a3a3a3 !important; }
 
 /* Keep Mock-rule status dots visibly red without changing other dark-theme controls. */
 html.dark .mock-rule-list .bg-red-50 { background-color: #3f1d1d !important; }

@@ -40,6 +40,8 @@ export interface ListItemProps {
   onDragStart?: (e: React.DragEvent) => void;
   // hover actions (right side of meta row)
   hoverActions?: React.ReactNode;
+  // optional hover utility for a non-selected row
+  inactiveHoverClassName?: string;
   // tooltip on the whole row
   title_?: string;
 }
@@ -62,6 +64,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   draggable,
   onDragStart,
   hoverActions,
+  inactiveHoverClassName = 'hover:bg-white',
   title_,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -115,7 +118,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       className={`px-3 py-2 cursor-pointer transition-colors group relative border-l-4 ${
         isActive
           ? 'bg-green-50 border-l-green-500'
-          : 'bg-transparent border-l-green-100 hover:bg-white hover:border-l-green-300'
+          : `bg-transparent border-l-green-100 ${inactiveHoverClassName} hover:border-l-green-300`
       }`}
     >
       {/* meta row */}

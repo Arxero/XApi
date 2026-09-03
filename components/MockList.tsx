@@ -137,6 +137,7 @@ export const MockList: React.FC<MockListProps> = ({
                 <ListItem
                   key={r.id}
                   isActive={isActive}
+                  inactiveHoverClassName="hover:bg-gray-100"
                   metaLeading={toggleDot}
                   method={r.method}
                   methodColorClass={getMethodColor(r.method === 'ANY' ? '' : r.method)}
