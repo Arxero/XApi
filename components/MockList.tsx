@@ -15,6 +15,7 @@ interface MockListProps {
   onDuplicate: (id: string) => void;
   onClear: () => void;
   onRename: (id: string, newName: string) => void;
+  onReorder: (sourceId: string, targetId: string) => void;
 }
 
 const t = (key: string, fallback: string) => {
@@ -41,12 +42,41 @@ const splitPattern = (pattern: string): { host: string; uri: string } => {
 
 export const MockList: React.FC<MockListProps> = ({
   rules, globalEnabled, activeRuleId,
-  onSelect, onCreate, onToggleGlobal, onToggleRule, onDelete, onDuplicate, onClear, onRename
+  onSelect, onCreate, onToggleGlobal, onToggleRule, onDelete, onDuplicate, onClear, onRename, onReorder
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null);
   // Per-rule monotonic counter; bumping the entry triggers ListItem's
   // editTrigger effect for that row.
   const [renameTicks, setRenameTicks] = useState<Record<string, number>>({});
+  const [draggedRuleId, setDraggedRuleId] = useState<string | null>(null);
+  const [dropTargetRuleId, setDropTargetRuleId] = useState<string | null>(null);
+
+  const startRuleDrag = (event: React.DragEvent, ruleId: string) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/x-xapi-mock-rule', ruleId);
+    setDraggedRuleId(ruleId);
+  };
+
+  const dragOverRule = (event: React.DragEvent, targetRuleId: string) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    if (draggedRuleId && draggedRuleId !== targetRuleId) {
+      setDropTargetRuleId(targetRuleId);
+    }
+  };
+
+  const dropRule = (event: React.DragEvent, targetRuleId: string) => {
+    event.preventDefault();
+    const sourceRuleId = event.dataTransfer.getData('application/x-xapi-mock-rule') || draggedRuleId;
+    if (sourceRuleId && sourceRuleId !== targetRuleId) onReorder(sourceRuleId, targetRuleId);
+    setDraggedRuleId(null);
+    setDropTargetRuleId(null);
+  };
+
+  const endRuleDrag = () => {
+    setDraggedRuleId(null);
+    setDropTargetRuleId(null);
+  };
 
   React.useEffect(() => {
     const close = () => setContextMenu(null);
@@ -134,32 +164,52 @@ export const MockList: React.FC<MockListProps> = ({
               );
 
               return (
-                <ListItem
+                <div
                   key={r.id}
-                  isActive={isActive}
-                  inactiveHoverClassName="hover:bg-gray-100"
-                  metaLeading={toggleDot}
-                  method={r.method}
-                  methodColorClass={getMethodColor(r.method === 'ANY' ? '' : r.method)}
-                  metaExtras={
-                    <>
-                      <span className="text-[10px] text-gray-400 uppercase">
-                        {r.mode === 'replace' ? 'replace' : r.mode === 'replace-body' ? 'body' : 'patch'}
+                  className={`relative ${
+                    dropTargetRuleId === r.id && draggedRuleId !== r.id
+                      ? 'before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-0.5 before:bg-green-500'
+                      : ''
+                  } ${draggedRuleId === r.id ? 'opacity-60' : ''}`}
+                  onDragOver={(event) => dragOverRule(event, r.id)}
+                  onDrop={(event) => dropRule(event, r.id)}
+                  onDragEnd={endRuleDrag}
+                >
+                  <ListItem
+                    isActive={isActive}
+                    inactiveHoverClassName="hover:bg-gray-100"
+                    metaLeading={toggleDot}
+                    method={r.method}
+                    methodColorClass={getMethodColor(r.method === 'ANY' ? '' : r.method)}
+                    metaExtras={
+                      <>
+                        <span className="text-[10px] text-gray-400 uppercase">
+                          {r.mode === 'replace' ? 'replace' : r.mode === 'replace-body' ? 'body' : 'patch'}
+                        </span>
+                        <span className="text-[9px] text-gray-400 ml-1">{hitsLabel}: {r.hitCount || 0}</span>
+                      </>
+                    }
+                    title={r.name}
+                    titleFallback={titleFallback}
+                    subtitle={subtitle}
+                    editable
+                    editPlaceholder={ruleNamePlaceholder}
+                    editTrigger={renameTicks[r.id]}
+                    onRename={(next) => onRename(r.id, next)}
+                    onClick={() => onSelect(r)}
+                    onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, id: r.id }); }}
+                    draggable
+                    onDragStart={(event) => startRuleDrag(event, r.id)}
+                    hoverActions={
+                      <span className="cursor-grab text-gray-400" title="Drag to reorder">
+                        <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                          <path d="M7 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm9 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM7 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm9 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM7 16a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm9 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                        </svg>
                       </span>
-                      <span className="text-[9px] text-gray-400 ml-1">{hitsLabel}: {r.hitCount || 0}</span>
-                    </>
-                  }
-                  title={r.name}
-                  titleFallback={titleFallback}
-                  subtitle={subtitle}
-                  editable
-                  editPlaceholder={ruleNamePlaceholder}
-                  editTrigger={renameTicks[r.id]}
-                  onRename={(next) => onRename(r.id, next)}
-                  onClick={() => onSelect(r)}
-                  onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, id: r.id }); }}
-                  title_={r.name || undefined}
-                />
+                    }
+                    title_={`${r.name ? `${r.name} — ` : ''}Drag to reorder. First matching rule wins.`}
+                  />
+                </div>
               );
             })}
           </div>

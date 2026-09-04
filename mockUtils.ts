@@ -33,6 +33,27 @@ export const matchRule = (
   return undefined;
 };
 
+/**
+ * Moves a rule relative to the target rule. Downward drops place it below the
+ * target; upward drops place it above. Array position is rule priority.
+ */
+export const reorderMockRules = (
+  rules: MockRule[],
+  sourceId: string,
+  targetId: string,
+): MockRule[] => {
+  if (sourceId === targetId) return rules;
+
+  const sourceIndex = rules.findIndex(rule => rule.id === sourceId);
+  const targetIndex = rules.findIndex(rule => rule.id === targetId);
+  if (sourceIndex < 0 || targetIndex < 0) return rules;
+
+  const next = [...rules];
+  const [source] = next.splice(sourceIndex, 1);
+  next.splice(targetIndex, 0, source);
+  return next;
+};
+
 // ============== JSON path ==============
 
 const RAW_PREFIX = '::raw::';

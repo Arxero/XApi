@@ -49,6 +49,7 @@ interface SidebarProps {
   onDuplicateMockRule: (id: string) => void;
   onClearMockRules: () => void;
   onRenameMockRule: (id: string, newName: string) => void;
+  onReorderMockRule: (sourceId: string, targetId: string) => void;
   onMockFromLog: (log: LoggedRequest) => void;
 }
 
@@ -70,7 +71,7 @@ const copyToClipboard = (text: string): boolean => {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab, onTabChange, history, onImportLoggedRequest, collections, rootRequests, tabs, activeRequestId, activeCapturedId, activeMockRuleId, onSelectRequest, onCreateCollection, onCreateRequest, onImportCurl, onClearHistory, onDeleteLog, onRenameCollection, onRenameRequest, onDeleteCollection, onDeleteRequest, onDuplicateRequest, onToggleCollapse, onMoveRequest, isRecording, onToggleRecording, onCollapseSidebar, onResetAllData, theme, onThemeChange,
-  mockRules, mockGlobalEnabled, onSelectMockRule, onCreateMockRule, onToggleMockGlobal, onToggleMockRule, onDeleteMockRule, onDuplicateMockRule, onClearMockRules, onRenameMockRule, onMockFromLog
+  mockRules, mockGlobalEnabled, onSelectMockRule, onCreateMockRule, onToggleMockGlobal, onToggleMockRule, onDeleteMockRule, onDuplicateMockRule, onClearMockRules, onRenameMockRule, onReorderMockRule, onMockFromLog
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'collection' | 'request' | 'log', id: string, data?: any } | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -285,6 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onDuplicate={onDuplicateMockRule}
             onClear={onClearMockRules}
             onRename={onRenameMockRule}
+            onReorder={onReorderMockRule}
           />
         ) : activeTab === 'history' ? (
           <div className="space-y-0.5">

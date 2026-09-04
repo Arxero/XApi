@@ -9,7 +9,7 @@ import { TabBar } from './components/TabBar';
 import { MockEditor } from './components/MockEditor';
 import { HttpRequest, HttpResponse, LoggedRequest, SidebarTab, CollectionItem, KeyValue, TabItem, MockRule } from './types';
 import { generateId, queryStringToParams, parseCurl } from './utils';
-import { createMockRule, MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, buildPatchesFromJson } from './mockUtils';
+import { createMockRule, MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, buildPatchesFromJson, reorderMockRules } from './mockUtils';
 import { applyLanguage, LANGUAGE_STORAGE_KEY } from './i18n';
 import type { AppLanguage } from './i18n';
 import { applyTheme, normalizeTheme, THEME_STORAGE_KEY } from './theme';
@@ -198,6 +198,11 @@ const App: React.FC = () => {
   const persistMockRules = (next: MockRule[]) => {
       setMockRules(next);
       chrome.storage.local.set({ [MOCK_RULES_KEY]: next });
+  };
+
+  const handleReorderMockRule = (sourceId: string, targetId: string) => {
+      const next = reorderMockRules(mockRules, sourceId, targetId);
+      if (next !== mockRules) persistMockRules(next);
   };
 
   const handleCreateMockRule = () => {
@@ -578,6 +583,7 @@ const App: React.FC = () => {
           onDuplicateMockRule={handleDuplicateMockRule}
           onClearMockRules={handleClearMockRules}
           onRenameMockRule={handleRenameMockRule}
+          onReorderMockRule={handleReorderMockRule}
           onMockFromLog={handleMockFromLog}
         />
       )}
