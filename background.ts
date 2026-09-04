@@ -1,4 +1,6 @@
 
+import type { GlobalHeader, LoggedRequest } from './types';
+
 // background.ts
 
 const MAX_LOGS = 100;
@@ -11,6 +13,23 @@ const REPLAY_HEADER_RULE_ID = 1;
 const GLOBAL_HEADER_RULE_ID = 2;
 const GLOBAL_HEADERS_KEY = 'globalHeaders';
 const GLOBAL_HEADERS_ENABLED_KEY = 'globalHeadersEnabled';
+
+type BackgroundStorage = {
+  globalHeaders?: GlobalHeader[];
+  globalHeadersEnabled?: boolean;
+  isRecording?: boolean;
+  logs?: LoggedRequest[];
+};
+
+type BackgroundMessage =
+  | { type: 'SET_REQUEST_HEADERS'; url: string; headers: GlobalHeader[] }
+  | { type: 'CLEAR_REQUEST_HEADERS' }
+  | {
+      type: 'XAPI_RESPONSE_BODY';
+      payload: { url: string; method: string; body: string; truncated?: boolean };
+    };
+
+type BackgroundResponse = { success: boolean; error?: string };
 
 // Store pending requests in memory to correlate headers/body/completion
 const pendingRequests: Record<string, any> = {};
@@ -43,9 +62,9 @@ chrome.runtime.onStartup.addListener(() => {
   applyGlobalHeaderRule();
 });
 
-chrome.storage.onChanged.addListener((changes) => {
+chrome.storage.onChanged.addListener((changes: Record<string, chrome.storage.StorageChange>) => {
   if (changes.isRecording) {
-    updateBadge(changes.isRecording.newValue);
+    updateBadge(changes.isRecording.newValue === true);
   }
   if (changes[GLOBAL_HEADERS_KEY] || changes[GLOBAL_HEADERS_ENABLED_KEY]) {
     applyGlobalHeaderRule();
@@ -57,7 +76,7 @@ chrome.storage.onChanged.addListener((changes) => {
 // single session rule (id=2) that SETs each enabled header on every XHR/Fetch
 // request. Removes the rule when disabled or when no enabled headers exist.
 const applyGlobalHeaderRule = () => {
-    chrome.storage.local.get([GLOBAL_HEADERS_KEY, GLOBAL_HEADERS_ENABLED_KEY], (result) => {
+    chrome.storage.local.get<BackgroundStorage>([GLOBAL_HEADERS_KEY, GLOBAL_HEADERS_ENABLED_KEY], (result) => {
         if (chrome.runtime.lastError) return;
         const enabled = result[GLOBAL_HEADERS_ENABLED_KEY] === true; // default OFF
         const headers = (result[GLOBAL_HEADERS_KEY] || []) as any[];
@@ -101,7 +120,11 @@ const applyGlobalHeaderRule = () => {
 };
 
 // --- DNR Rule Manager for Header Overrides ---
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((
+  message: BackgroundMessage,
+  _sender: chrome.runtime.MessageSender,
+  sendResponse: (response: BackgroundResponse) => void,
+) => {
     if (message.type === 'SET_REQUEST_HEADERS') {
         const { url, headers } = message;
         const ruleId = 1;
@@ -134,8 +157,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             addRules: [rule]
         }).then(() => {
             sendResponse({ success: true });
-        }).catch(err => {
-            sendResponse({ success: false, error: err.message });
+        }).catch((err: unknown) => {
+            sendResponse({
+                success: false,
+                error: err instanceof Error ? err.message : String(err),
+            });
         });
         return true;
     }
@@ -154,7 +180,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'XAPI_RESPONSE_BODY' && message.payload) {
         const { url, method, body, truncated } = message.payload;
         if (typeof url !== 'string' || typeof body !== 'string') return;
-        chrome.storage.local.get(['isRecording'], (result) => {
+        chrome.storage.local.get<BackgroundStorage>(['isRecording'], (result) => {
             if (!result.isRecording) return;
             attachResponseBody(url, method, body, !!truncated);
         });
@@ -180,7 +206,7 @@ const attachResponseBody = (url: string, method: string, body: string, truncated
     }
     // 2) Fallback: patch the most recent matching entry already in storage,
     //    bounded to the last 10s to avoid overwriting unrelated old logs.
-    chrome.storage.local.get(['logs'], (res) => {
+    chrome.storage.local.get<BackgroundStorage>(['logs'], (res) => {
         const logs = (res.logs || []) as any[];
         const now = Date.now();
         const idx = logs.findIndex((l: any) =>
@@ -205,7 +231,7 @@ const processQueue = () => {
     isSaving = true;
     const logToSave = saveQueue.shift();
 
-    chrome.storage.local.get(['logs'], (result) => {
+    chrome.storage.local.get<BackgroundStorage>(['logs'], (result) => {
         const currentLogs = result.logs || [];
         const idx = currentLogs.findIndex((l: any) => l.id === logToSave.id);
         let newLogs;
@@ -267,12 +293,18 @@ const getOrCreatePending = (requestId: string) => {
     return pendingRequests[requestId];
 };
 
+// These listeners capture request data only. `undefined` is the explicit
+// no-op response required by Chrome's webRequest type definitions.
+const noBlockingResponse = (): chrome.webRequest.BlockingResponse | undefined => undefined;
+
 // 1. Capture Basic Info & Body
 chrome.webRequest.onBeforeRequest.addListener(
-  (details: any) => {
-    if (isExtensionRequest(details) || details.type === 'ping' || !isApiRequest(details)) return;
+  (details: chrome.webRequest.OnBeforeRequestDetails) => {
+    if (isExtensionRequest(details) || details.type === 'ping' || !isApiRequest(details)) {
+      return noBlockingResponse();
+    }
 
-    chrome.storage.local.get(['isRecording'], (result) => {
+    chrome.storage.local.get<BackgroundStorage>(['isRecording'], (result) => {
       if (!result.isRecording) return;
 
       const log = getOrCreatePending(details.requestId);
@@ -292,6 +324,8 @@ chrome.webRequest.onBeforeRequest.addListener(
 
       saveLog(log);
     });
+
+    return noBlockingResponse();
   },
   { urls: ["<all_urls>"] },
   ["requestBody"]
@@ -299,19 +333,23 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 // 2. Capture Request Headers
 chrome.webRequest.onBeforeSendHeaders.addListener(
-  (details: any) => {
-    if (isExtensionRequest(details) || !isApiRequest(details)) return;
+  (details: chrome.webRequest.OnBeforeSendHeadersDetails) => {
+    if (isExtensionRequest(details) || !isApiRequest(details)) {
+      return noBlockingResponse();
+    }
 
-    chrome.storage.local.get(['isRecording'], (result) => {
+    chrome.storage.local.get<BackgroundStorage>(['isRecording'], (result) => {
         if (!result.isRecording) return;
 
         const log = getOrCreatePending(details.requestId);
         const headers: Record<string, string> = {};
-        details.requestHeaders?.forEach((h: any) => { headers[h.name] = h.value || ''; });
+        details.requestHeaders?.forEach((header) => { headers[header.name] = header.value || ''; });
         log.requestHeaders = { ...log.requestHeaders, ...headers };
 
         saveLog(log);
     });
+
+    return noBlockingResponse();
   },
   { urls: ["<all_urls>"] },
   ["requestHeaders", "extraHeaders"]
@@ -319,19 +357,23 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
 // 3. Capture Response Headers
 chrome.webRequest.onHeadersReceived.addListener(
-  (details: any) => {
-    if (isExtensionRequest(details) || !isApiRequest(details)) return;
+  (details: chrome.webRequest.OnHeadersReceivedDetails) => {
+    if (isExtensionRequest(details) || !isApiRequest(details)) {
+      return noBlockingResponse();
+    }
 
-    chrome.storage.local.get(['isRecording'], (result) => {
+    chrome.storage.local.get<BackgroundStorage>(['isRecording'], (result) => {
         if (!result.isRecording) return;
 
         const log = getOrCreatePending(details.requestId);
         const headers: Record<string, string> = {};
-        details.responseHeaders?.forEach((h: any) => { headers[h.name] = h.value || ''; });
+        details.responseHeaders?.forEach((header) => { headers[header.name] = header.value || ''; });
         log.responseHeaders = { ...log.responseHeaders, ...headers };
 
         saveLog(log);
     });
+
+    return noBlockingResponse();
   },
   { urls: ["<all_urls>"] },
   ["responseHeaders", "extraHeaders"]

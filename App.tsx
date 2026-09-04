@@ -15,6 +15,19 @@ import type { AppLanguage } from './i18n';
 import { applyTheme, normalizeTheme, THEME_STORAGE_KEY } from './theme';
 import type { Theme } from './theme';
 
+type AppStorage = {
+  collections?: CollectionItem[];
+  logs?: LoggedRequest[];
+  savedTabs?: TabItem[];
+  savedActiveTabId?: string;
+  isRecording?: boolean;
+  rootRequests?: HttpRequest[];
+  mockRules?: MockRule[];
+  mockGlobalEnabled?: boolean;
+  appLanguage?: AppLanguage;
+  colorTheme?: Theme;
+};
+
 // 浏览器禁止通过 fetch 接口设置的请求头列表
 const FORBIDDEN_HEADERS = [
     'cookie', 'cookie2', 'origin', 'referer', 'host', 'connection', 'content-length', 
@@ -105,7 +118,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (chrome && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(['collections', 'logs', 'savedTabs', 'savedActiveTabId', 'isRecording', 'rootRequests', MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY], (result) => {
+      chrome.storage.local.get<AppStorage>(['collections', 'logs', 'savedTabs', 'savedActiveTabId', 'isRecording', 'rootRequests', MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY], (result) => {
         if (result.collections) setCollections(result.collections);
         if (result.rootRequests) setRootRequests(result.rootRequests);
         setIsRecording(!!result.isRecording);

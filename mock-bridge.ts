@@ -1,3 +1,5 @@
+import type { MockRule } from './types';
+
 /**
  * XApi mock-bridge — runs as a content script in the ISOLATED world.
  * It bridges chrome.storage rules to the page's MAIN world (mock-injector.ts)
@@ -8,17 +10,22 @@ const MSG_TAG = 'xapi-mock';
 const MOCK_RULES_KEY = 'mockRules';
 const MOCK_GLOBAL_ENABLED_KEY = 'mockGlobalEnabled';
 
+type MockStorage = {
+  mockRules?: MockRule[];
+  mockGlobalEnabled?: boolean;
+};
+
 let pendingHits: Record<string, number> = {};
 let flushTimer: number | null = null;
 let lastFlush = 0;
 
-const sendRulesToMainWorld = (enabled: boolean, rules: any[]) => {
-  window.postMessage({ source: MSG_TAG, type: 'rules', enabled, rules: rules || [] }, '*');
+const sendRulesToMainWorld = (enabled: boolean, rules: MockRule[]) => {
+  window.postMessage({ source: MSG_TAG, type: 'rules', enabled, rules }, '*');
 };
 
 const loadAndPush = () => {
   try {
-    chrome.storage.local.get([MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY], (result) => {
+    chrome.storage.local.get<MockStorage>([MOCK_RULES_KEY, MOCK_GLOBAL_ENABLED_KEY], (result) => {
       if (chrome.runtime.lastError) return;
       const rules = result[MOCK_RULES_KEY] || [];
       const enabled = result[MOCK_GLOBAL_ENABLED_KEY] === true; // default OFF
@@ -34,7 +41,7 @@ loadAndPush();
 
 // Re-push when the user toggles rules.
 try {
-  chrome.storage.onChanged.addListener((changes, area) => {
+  chrome.storage.onChanged.addListener((changes, area?: string) => {
     if (area !== 'local') return;
     if (changes[MOCK_RULES_KEY] || changes[MOCK_GLOBAL_ENABLED_KEY]) {
       loadAndPush();
@@ -98,9 +105,9 @@ const flushHits = () => {
   const ids = Object.keys(hits);
   if (ids.length === 0) return;
   try {
-    chrome.storage.local.get([MOCK_RULES_KEY], (result) => {
+    chrome.storage.local.get<MockStorage>([MOCK_RULES_KEY], (result) => {
       if (chrome.runtime.lastError) return;
-      const rules = (result[MOCK_RULES_KEY] || []) as any[];
+      const rules = result[MOCK_RULES_KEY] || [];
       let changed = false;
       const next = rules.map(r => {
         const inc = hits[r.id];

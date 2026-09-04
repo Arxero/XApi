@@ -1,8 +1,7 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import {viteStaticCopy} from 'vite-plugin-static-copy';
-import { resolve } from 'path';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { resolve } from 'node:path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,17 +19,17 @@ export default defineConfig({
         },
         {
           src: '_locales/**/*',
-          dest: '_locales'
+          dest: '.'
         },
         {
           src: 'icons/**/*',
-          dest: 'icons'
+          dest: '.'
         }
       ]
     })
   ],
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         popup: resolve('popup.html'),
         panel: resolve('panel.html'),
@@ -43,7 +42,9 @@ export default defineConfig({
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
         assetFileNames: (assetInfo) =>
-          assetInfo.name === 'index.css' ? 'index-[hash][extname]' : '[name].[ext]'
+          assetInfo.names?.some((name) => name.endsWith('.css'))
+            ? 'index-[hash][extname]'
+            : '[name].[ext]'
       }
     },
     outDir: 'dist',

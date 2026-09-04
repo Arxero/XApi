@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { applyLanguage, LANGUAGE_STORAGE_KEY } from './i18n';
+import type { AppLanguage } from './i18n';
 import { applyTheme, normalizeTheme, THEME_STORAGE_KEY } from './theme';
 import type { Theme } from './theme';
 import { LoggedRequest, MockRule, GlobalHeader } from './types';
@@ -19,6 +20,18 @@ import { Logo } from './components/Logo';
 type PopupTab = 'capture' | 'mock' | 'header';
 
 const POPUP_ACTIVE_TAB_KEY = 'popupActiveTab';
+
+type PopupStorage = {
+  isRecording?: boolean;
+  logs?: LoggedRequest[];
+  mockGlobalEnabled?: boolean;
+  mockRules?: MockRule[];
+  globalHeaders?: GlobalHeader[];
+  globalHeadersEnabled?: boolean;
+  popupActiveTab?: PopupTab;
+  appLanguage?: AppLanguage;
+  colorTheme?: Theme;
+};
 
 const Popup = () => {
   const [activeTab, setActiveTab] = useState<PopupTab>('capture');
@@ -57,7 +70,7 @@ const Popup = () => {
   useEffect(() => {
     // Load initial state
     if (chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(
+      chrome.storage.local.get<PopupStorage>(
         ['isRecording', 'logs', MOCK_GLOBAL_ENABLED_KEY, MOCK_RULES_KEY, GLOBAL_HEADERS_KEY, GLOBAL_HEADERS_ENABLED_KEY, POPUP_ACTIVE_TAB_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY],
         (result) => {
           const storedLanguage = result[LANGUAGE_STORAGE_KEY];

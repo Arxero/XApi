@@ -60,6 +60,9 @@ XApi is available on the Chrome Web Store. Search for **XApi** or use the link b
 - [XApi - HTTP Client & API Test](https://chromewebstore.google.com/detail/xapi-http-client-api-test/ilcnglohbiokfdcokfceihebobkpeaij?authuser=0&hl=en)
 
 #### Manual installation (from source)
+
+Prerequisite: [Node.js](https://nodejs.org/) `20.19.0` or newer in the Node 20 line, or Node `22.12.0` or newer.
+
 1. Clone and build:
    ```bash
    git clone https://github.com/lustan/XApi.git
@@ -71,6 +74,17 @@ XApi is available on the Chrome Web Store. Search for **XApi** or use the link b
    - Go to `chrome://extensions/`
    - Enable **Developer mode** (top right)
    - Click **Load unpacked** and select the `dist` folder.
+
+#### Unpacked-extension smoke check
+
+After loading or reloading `dist` in Chrome:
+
+- Open the popup and confirm the **Capture**, **Mock**, and **Header** tabs render with their styles.
+- Start capture, trigger an XHR or Fetch request, and confirm it appears in the DevTools **XApi** panel.
+- Stop capture and confirm new requests are no longer recorded.
+- Enable a mock rule and confirm the matching response is overridden.
+- Enable a global header and confirm it is present on a matching request.
+- Reset all data while capture is active and confirm the `REC` badge disappears.
 
 ### Usage
 
